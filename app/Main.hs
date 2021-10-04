@@ -1,33 +1,35 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE RecordWildCards #-}
+
 module Main where
-import qualified Data.Sequence as SQ
-import Data.Sequence ( (|>), Seq((:<|)) )
-import qualified Data.Set as S
-import Data.Set (Set, member, insert)
-import qualified Data.Map as M
-import Data.Map (Map)
-import Text.Read ( readMaybe )
-import Data.Function ((&))
+
+import Data.Char (toLower, toUpper)
 import Data.Foldable (toList)
-import System.Console.ANSI
-import System.IO
-import Data.Char
+import Data.Function ((&))
+import Data.Map (Map)
+import qualified Data.Map as M
+import Data.Sequence (Seq ((:<|)), (|>))
+import qualified Data.Sequence as SQ
+import Data.Set (Set, insert, member)
+import qualified Data.Set as S
+import System.Console.ANSI (clearScreen, setCursorPosition)
+import System.IO (hFlush, stdout)
+import Text.Read (readMaybe)
 
 type Person = String
 
-data TalarLista = TalarLista { lista1 :: Seq Person, lista2 :: Seq Person, talat :: Set Person }
+data TalarLista = TalarLista {lista1 :: Seq Person, lista2 :: Seq Person, talat :: Set Person}
   deriving (Eq, Show)
 
 type AmountSpoken = Int
 
 data TalarListor = TalarListor {lists :: [TalarLista], globalStats :: Map Person AmountSpoken}
-  deriving Show
+  deriving (Show)
 
 clearPerson :: TalarLista -> TalarLista
 clearPerson (TalarLista (x :<| xs) l2 set) = TalarLista xs l2 (insert x set)
-clearPerson (TalarLista [] (x :<| xs) set) = TalarLista [] xs (insert x set)
-clearPerson (TalarLista [] [] set) = TalarLista [] [] set
+clearPerson (TalarLista [] (x :<| xs) set) = TalarLista [] xs (insert x set)
+clearPerson (TalarLista [] [] set) = TalarLista [] [] set
 
 removeName :: Person -> TalarLista -> TalarLista
 removeName person (TalarLista l1 l2 set) = TalarLista (SQ.filter (/= person) l1) (SQ.filter (/= person) l2) set
@@ -36,29 +38,30 @@ handleInput :: String -> TalarListor -> TalarListor
 handleInput "push" (TalarListor lists gstats) = TalarListor (emptyList : lists) gstats
 handleInput "pop" (TalarListor [] gstats) = TalarListor [emptyList] gstats
 handleInput "pop" (TalarListor [x] gstats) = TalarListor [emptyList] gstats
-handleInput "pop" (TalarListor (list:rest) gstats) = TalarListor rest gstats
-handleInput "x" (TalarListor (list:rest) gstats) = TalarListor (clearPerson list : rest) gstats
+handleInput "pop" (TalarListor (list : rest) gstats) = TalarListor rest gstats
+handleInput "x" (TalarListor (list : rest) gstats) = TalarListor (clearPerson list : rest) gstats
 handleInput "clear" ls = handleInput "x" ls
-handleInput ('x':' ': name) (TalarListor (list :rest) gstats) = TalarListor (removeName name list : rest) gstats
+handleInput ('x' : ' ' : name) (TalarListor (list : rest) gstats) = TalarListor (removeName name list : rest) gstats
 handleInput "n" _ = empty
 handleInput "new" l = handleInput "n" l
-handleInput (p:erson) (TalarListor (list:rest) gstats) = let person = toUpper p : erson in
-    if person `member` talat list 
-      then TalarListor (list {lista2 = lista2 list |> person} : rest) (M.insertWith (+) person 1 gstats)
-      else TalarListor (list {lista1 = lista1 list |> person} : rest) (M.insertWith (+) person 1 gstats)
+handleInput (p : erson) (TalarListor (list : rest) gstats) =
+  let person = toUpper p : erson
+   in if person `member` talat list
+        then TalarListor (list {lista2 = lista2 list |> person} : rest) (M.insertWith (+) person 1 gstats)
+        else TalarListor (list {lista1 = lista1 list |> person} : rest) (M.insertWith (+) person 1 gstats)
 
 emptyList :: TalarLista
-emptyList = TalarLista [] [] S.empty
+emptyList = TalarLista [] [] S.empty
 
 empty :: TalarListor
 empty = TalarListor [emptyList] M.empty
 
 printList :: TalarLista -> String
-printList TalarLista {..} = unlines (toList $ lista1 <> lista2)
+printList TalarLista {..} = unlines (toList $ lista1 <> lista2)
 
 printListor :: TalarListor -> String
 printListor (TalarListor [] _) = error "Något har gått riktigt fel"
-printListor (TalarListor (x:xs) gstats) = "Talarlista " <> show (length xs) <> "\n" <> printList x
+printListor (TalarListor (x : xs) gstats) = "Talarlista " <> show (length xs) <> "\n" <> printList x
 
 printHeader :: IO ()
 printHeader = do
@@ -80,7 +83,5 @@ loop l = do
   writeFile "gstats" (show $ globalStats new)
   loop new
 
-
 main :: IO ()
 main = loop empty
-
