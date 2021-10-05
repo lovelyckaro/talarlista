@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications#-}
+{-# LANGUAGE BlockArguments #-}
 
 module Main where
 
@@ -15,8 +17,21 @@ import qualified Data.Set as S
 import System.Console.ANSI (clearScreen, setCursorPosition)
 import System.IO (hFlush, stdout)
 import Text.Read (readMaybe)
+import Text.Megaparsec hiding (empty)
+import Text.Megaparsec.Char
+import Data.Void (Void)
+import Control.Monad (void)
+import Data.List.Extra (trim)
 
 type Person = String
+data Action = 
+  RemoveTop
+  | RemovePerson Person
+  | Push
+  | Pop
+  | Reset
+  | AddPerson Person
+    deriving Show
 
 data TalarLista = TalarLista {lista1 :: Seq Person, lista2 :: Seq Person, talat :: Set Person}
   deriving (Eq, Show)
@@ -37,25 +52,69 @@ removeName person (TalarLista l1 l2 set) = TalarLista (SQ.filter (/= person) l1)
 suc :: Person -> Map Person AmountSpoken -> Map Person AmountSpoken
 suc person = M.insertWith (+) person 1 
 
-handleInput :: String -> TalarListor -> TalarListor
-handleInput "push" (TalarListor lists gstats) = TalarListor (emptyList : lists) gstats
-handleInput "pop" (TalarListor [] gstats) = TalarListor [emptyList] gstats
-handleInput "pop" (TalarListor [x] gstats) = TalarListor [emptyList] gstats
-handleInput "pop" (TalarListor (list : rest) gstats) = TalarListor rest gstats
-handleInput "x" (TalarListor (list : rest) gstats) = TalarListor (clearPerson list : rest) gstats
-handleInput "clear" ls = handleInput "x" ls
-handleInput ('x' : ' ' : name) (TalarListor (list : rest) gstats) = TalarListor (removeName name list : rest) gstats
-handleInput "n" _ = empty
-handleInput "new" l = handleInput "n" l
-handleInput person (TalarListor (list : rest) gstats)
-  | person `member` talat list = TalarListor (list {lista2 = lista2 list |> person} : rest) (suc person gstats)
-  | otherwise =  TalarListor (list {lista1 = lista1 list |> person} : rest) (suc person gstats)
+pushLists :: TalarListor -> TalarListor
+pushLists (TalarListor lists gstats) = TalarListor (emptyList : lists) gstats
+
+popLists :: TalarListor -> TalarListor
+popLists (TalarListor [] gstats) = error "unreachable"
+popLists (TalarListor [x] gstats) = TalarListor [emptyList] gstats
+popLists (TalarListor (x:xs) gstats) = TalarListor xs gstats
+
+removeTop :: TalarListor -> TalarListor
+removeTop (TalarListor (list : rest) gstats) = TalarListor (clearPerson list : rest) gstats
+
+removePerson :: Person -> TalarListor -> TalarListor
+removePerson name (TalarListor (list : rest) gstats )= TalarListor (removeName name list : rest) gstats
+
+addPerson :: Person -> TalarListor -> TalarListor
+addPerson name (TalarListor (list : rest) gstats) 
+  | name `member` talat list = TalarListor (list {lista2 = lista2 list |> name} : rest) (suc name gstats)
+  | otherwise                = TalarListor (list {lista1 = lista1 list |> name} : rest) (suc name gstats)
+
+handleAction :: Action -> TalarListor -> TalarListor
+handleAction Push = pushLists 
+handleAction Pop = popLists 
+handleAction RemoveTop = removeTop
+handleAction (RemovePerson name) = removePerson name
+handleAction (AddPerson name) = addPerson name
+handleAction Reset = const empty
 
 emptyList :: TalarLista
 emptyList = TalarLista [] [] S.empty
 
 empty :: TalarListor
 empty = TalarListor [emptyList] M.empty
+
+-- Parsers go here
+type Parser = Parsec Void String
+
+pRemove, pRemovePerson, pPush, pPop, pReset, pAddPerson, pAction, pAddExplicit :: Parser Action
+pRemove = do
+  void (char' 'x') <|> void (string' "remove")
+  return RemoveTop
+
+pRemovePerson = do
+  void (char' 'x') <|> void (string' "remove")
+  space
+  name <- some printChar
+  return (RemovePerson name)
+
+pPush = string' "push" >> return Push
+pPop = string' "pop" >> return Pop
+pReset = string' "reset" >> return Reset
+pAddExplicit = do
+  string' "add" 
+  space 
+  name <- some printChar
+  return (AddPerson name)
+pAddPerson = AddPerson <$> some printChar 
+
+actionParsers :: [Parser Action]
+actionParsers = [pRemovePerson, pRemove, pPush, pPop, pReset, pAddExplicit, pAddPerson]
+
+pAction = foldr1 (<|>) (map try actionParsers)
+
+-- Showers go here
 
 nameCap :: String -> String
 nameCap [] = []
@@ -72,21 +131,33 @@ printHeader :: IO ()
 printHeader = do
   clearScreen
   setCursorPosition 0 0
-  putStrLn "Talarlista input"
+  putStrLn (unlines 
+    ["Talarlista input:"
+    ,"'x' or 'remove' to remove speaker"
+    ,"'x NAME' or 'remove NAME' to remove specific speaker"
+    ,"'NAME' or 'add NAME' to add person to list"
+    ,"'push' to enter new list"
+    ,"'pop' to throw away current list and go back"])
   hFlush stdout
 
 sanitize :: String -> String
-sanitize = map toLower
+sanitize = map toLower . trim
 
 loop :: TalarListor -> IO ()
 loop l = do
   printHeader
   inp <- getLine
   let sanitized = sanitize inp
-  let new = handleInput sanitized l
-  writeFile "output" (printListor new)
-  writeFile "gstats" (show $ globalStats new)
-  loop new
+  let action = parse pAction "Input" sanitized
+  n <- case action of
+    Left _ -> do
+      return l
+    Right value -> do
+      let new = handleAction value l
+      writeFile "output" (printListor new)
+      writeFile "gstats" (show $ globalStats new)
+      return new
+  loop n
 
 main :: IO ()
 main = loop empty
