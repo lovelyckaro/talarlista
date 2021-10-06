@@ -32,3 +32,9 @@ executable talarlista
     build-depends:    base ^>=4.15.0.0, containers, ansi-terminal, megaparsec, extra, directory
     hs-source-dirs:   app
     default-language: Haskell2010
+
+executable watcher
+    main-is: Main.hs
+    build-depends: base, process
+    hs-source-dirs: watcher
+    default-language: Haskell2010
