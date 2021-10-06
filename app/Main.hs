@@ -23,6 +23,7 @@ import qualified Data.Set as S
 import Data.Void (Void)
 import System.Console.ANSI (clearScreen, setCursorPosition)
 import System.IO (hFlush, stdout)
+import System.Directory
 import Text.Megaparsec
   ( MonadParsec (try),
     Parsec,
@@ -223,8 +224,8 @@ printHeader = do
   hFlush stdout
 
 -- | Main loop
-loop :: SpeakerLists -> IO ()
-loop l = do
+loop :: SpeakerLists -> FilePath -> IO ()
+loop l homedir = do
   printHeader
   inp <- getLine
   let sanitized = sanitize inp
@@ -234,11 +235,16 @@ loop l = do
       return l
     Right value -> do
       let new = handleAction value l
-      writeFile "output" (printListor new)
-      writeFile "gstats" (show $ globalStats new)
+      writeFile (homedir <> "/.talarlista/output") (printListor new)
+      writeFile (homedir <> "/.talarlista/gstats") (show $ globalStats new)
       return new
-  loop n
+  loop n homedir
 
 -- | main = loop empty
 main :: IO ()
-main = loop empty
+main = do
+  homedir <- getHomeDirectory
+  createDirectoryIfMissing True (homedir <> "")
+  writeFile (homedir <> "/.talarlista/output") ""
+  writeFile (homedir <> "/.talarlista/gstats") ""
+  loop empty homedir
