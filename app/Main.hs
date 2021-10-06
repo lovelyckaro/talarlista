@@ -13,7 +13,6 @@ module Main where
 import Control.Monad (void)
 import Data.Char (toLower, toUpper)
 import Data.Foldable (toList)
-import Data.Function ((&))
 import Data.List.Extra (trim)
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -103,7 +102,7 @@ pushLists (SpeakerLists lists gstats) =
 --  previous one.
 popLists :: SpeakerLists -> SpeakerLists
 popLists (SpeakerLists [] gstats) = error "unreachable"
-popLists (SpeakerLists [x] gstats) = SpeakerLists [emptyList] gstats
+popLists (SpeakerLists [x] gstats) = SpeakerLists [x] gstats
 popLists (SpeakerLists (x : xs) gstats) = SpeakerLists xs gstats
 
 -- | Remove top speaker from current active list.
