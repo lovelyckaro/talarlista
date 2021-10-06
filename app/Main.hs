@@ -48,7 +48,7 @@ loop l homedir = do
     Right value -> do
       let new = handleAction value l
       writeFile (homedir <> "/.talarlista/output") (printLists new)
-      writeFile (homedir <> "/.talarlista/gstats") (show $ globalStats new)
+      writeFile (homedir <> "/.talarlista/gstats") (printGStats new)
       return new
   loop n homedir
 
