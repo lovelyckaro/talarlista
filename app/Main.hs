@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE RecordWildCards #-}
-{-|
-Module      : Main
-Description : Speaker list program for student division meetings in the
-Computer Science and Engineering Division of the Chalmers Student Union.
-Maintainer  : love.lyckaro@dtek.se
-Stability   : experimental
-Portability : POSIX
--}
+
+-- |
+-- Module      : Main
+-- Description : Speaker list program for student division meetings in the
+-- Computer Science and Engineering Division of the Chalmers Student Union.
+-- Maintainer  : love.lyckaro@dtek.se
+-- Stability   : experimental
+-- Portability : POSIX
 module Main where
 
 import Control.Monad (void)
@@ -22,8 +22,8 @@ import Data.Set (Set, insert, member)
 import qualified Data.Set as S
 import Data.Void (Void)
 import System.Console.ANSI (clearScreen, setCursorPosition)
-import System.IO (hFlush, stdout)
 import System.Directory
+import System.IO (hFlush, stdout)
 import Text.Megaparsec
   ( MonadParsec (try),
     Parsec,
@@ -143,54 +143,55 @@ empty = SpeakerLists [emptyList] M.empty
 type Parser = Parsec Void String
 
 -- * Parsers
--- | Here be some parsers of Actions
 
+-- | Here be some parsers of Actions
 pRemove, pRemovePerson, pPush, pPop, pReset, pAddPerson, pAction, pAddExplicit :: Parser Action
 
--- |Parses 'RemoveTop' 'Action's
+-- | Parses 'RemoveTop' 'Action's
 pRemove = do
   void (char' 'x') <|> void (string' "remove")
   return RemoveTop
--- |Parses 'RemovePerson' 'Action's
 
+-- | Parses 'RemovePerson' 'Action's
 pRemovePerson = do
   void (char' 'x') <|> void (string' "remove")
   space
   name <- some printChar
   return (RemovePerson name)
 
--- |Parses 'Push' 'Action's
+-- | Parses 'Push' 'Action's
 pPush = string' "push" >> return Push
 
--- |Parses 'Pop' 'Action's
+-- | Parses 'Pop' 'Action's
 pPop = string' "pop" >> return Pop
 
--- |Parses 'ResetAll' 'Action's
+-- | Parses 'ResetAll' 'Action's
 pReset = string' "reset" >> return ResetAll
 
--- |Parses 'AddPerson' 'Action's with explicit add
+-- | Parses 'AddPerson' 'Action's with explicit add
 pAddExplicit = do
   string' "add"
   space
   name <- some printChar
   return (AddPerson name)
 
--- |Parses 'AddPerson' 'Action's without explicit add
+-- | Parses 'AddPerson' 'Action's without explicit add
 pAddPerson = AddPerson <$> some printChar
 
--- |List of action parsers
+-- | List of action parsers
 actionParsers :: [Parser Action]
 actionParsers = [pRemovePerson, pRemove, pPush, pPop, pReset, pAddExplicit, pAddPerson]
 
 -- | Parser for any action
 pAction = foldr1 (<|>) (map try actionParsers)
 
--- |trim and lowercase a string (done before parsing)
+-- | trim and lowercase a string (done before parsing)
 sanitize :: String -> String
 sanitize = map toLower . trim
 
 -- * Pretty printers and IO
--- | here be some pretty printers and IO shit.
+
+-- |  here be some pretty printers and IO shit.
 
 -- | Capitalize first letter in string
 nameCap :: String -> String
@@ -240,7 +241,7 @@ loop l homedir = do
       return new
   loop n homedir
 
--- | main = loop empty
+-- |  main = loop empty
 main :: IO ()
 main = do
   homedir <- getHomeDirectory
