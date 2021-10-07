@@ -56,7 +56,7 @@ loop l homedir = do
 main :: IO ()
 main = do
   homedir <- getHomeDirectory
-  createDirectoryIfMissing True (homedir <> "")
+  createDirectoryIfMissing True (homedir <> "/.talarlista")
   writeFile (homedir <> "/.talarlista/output") ""
   writeFile (homedir <> "/.talarlista/gstats") ""
   loop empty homedir
