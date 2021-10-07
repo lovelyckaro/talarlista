@@ -22,7 +22,8 @@ type Parser = Parsec Void String
 -- * Parsers
 
 -- | Here be some parsers of Actions
-pRemove, pRemovePerson, pPush, pPop, pReset, pAddPerson, pAction, pAddExplicit :: Parser Action
+pRemove, pRemovePerson, pPush, pPop, pReset :: Parser Action
+pAddPerson, pAction, pAddExplicit, pClear :: Parser Action
 
 -- | Parses 'RemoveTop' 'Action's
 pRemove = do
@@ -45,6 +46,9 @@ pPop = string' "pop" >> return Pop
 -- | Parses 'ResetAll' 'Action's
 pReset = string' "reset" >> return ResetAll
 
+-- | Parses 'Clear' 'Action's
+pClear = string' "clear" >> return Clear
+
 -- | Parses 'AddPerson' 'Action's with explicit add
 pAddExplicit = do
   string' "add"
@@ -57,7 +61,7 @@ pAddPerson = AddPerson <$> some printChar
 
 -- | List of action parsers
 actionParsers :: [Parser Action]
-actionParsers = [pRemovePerson, pRemove, pPush, pPop, pReset, pAddExplicit, pAddPerson]
+actionParsers = [pRemovePerson, pRemove, pPush, pPop, pClear, pReset, pAddExplicit, pAddPerson]
 
 -- | Parser for any action
 pAction = foldr1 (<|>) (map try actionParsers)

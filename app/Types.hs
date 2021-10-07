@@ -20,6 +20,8 @@ data Action
     ResetAll
   | -- | Add a new person to the list
     AddPerson Person
+  | -- | Clear current list
+    Clear
   deriving (Show)
 
 data SpeakerList = SpeakerList

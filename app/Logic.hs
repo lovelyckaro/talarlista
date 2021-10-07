@@ -53,6 +53,10 @@ addPerson name (SpeakerLists (list : rest) gstats)
   | name `member` talat list = SpeakerLists (list {lista2 = lista2 list |> name} : rest) (suc name gstats)
   | otherwise = SpeakerLists (list {lista1 = lista1 list |> name} : rest) (suc name gstats)
 
+clearCurrent :: SpeakerLists -> SpeakerLists
+clearCurrent (SpeakerLists (list : rest) gstats) = 
+  SpeakerLists (emptyList : rest) gstats
+
 -- |  'handleAction' takes an action and modifies the 'SpeakerLists' accordingly
 handleAction :: Action -> SpeakerLists -> SpeakerLists
 handleAction Push = pushLists
@@ -61,6 +65,7 @@ handleAction RemoveTop = removeTop
 handleAction (RemovePerson name) = removePerson name
 handleAction (AddPerson name) = addPerson name
 handleAction ResetAll = const empty
+handleAction Clear = clearCurrent
 
 -- | Default, empty 'SpeakerList'
 emptyList :: SpeakerList

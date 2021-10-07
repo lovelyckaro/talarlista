@@ -31,7 +31,8 @@ printHeader = do
           "'x NAME' or 'remove NAME' to remove specific speaker",
           "'NAME' or 'add NAME' to add person to list",
           "'push' to enter new list",
-          "'pop' to throw away current list and go back"
+          "'pop' to throw away current list and go back",
+          "'clear' to clear the current list"
         ]
     )
   hFlush stdout
