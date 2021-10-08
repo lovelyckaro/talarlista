@@ -20,8 +20,18 @@ printList SpeakerList {..} = unlines (toList (nameCap <$> (lista1 <> ["———
 -- | Pretty format for 'SpeakerLists'
 printLists :: SpeakerLists -> String
 printLists (SpeakerLists [] _) = error "Något har gått riktigt fel"
-printLists (SpeakerLists (x : xs) gstats) = "Talarlista " <> show (length xs) <> "\n" <> printList x
+printLists (SpeakerLists (x : xs) gstats) = "Talarlista " <> 
+                                            show (length xs) <> " " <> listEmoji (length xs) <> "\n" <> 
+                                            "Använd gärna tal-lapparna 😁" <> "\n" <> 
+                                            printList x
 
 -- | Pretty format for 'globalStats', written in a horribly point-free form
 printGStats :: SpeakerLists -> String
 printGStats = bifoldMap (<> ": ") ((<> "\n") . show) . globalStats
+
+listEmoji :: Int -> String
+listEmoji 0 = "😊"
+listEmoji 1 = "😮"
+listEmoji 2 = "😬"
+listEmoji 3 = "😡"
+listEmoji l = "📮" 
