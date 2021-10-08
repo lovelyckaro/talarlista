@@ -29,6 +29,7 @@ printLists (SpeakerLists (x : xs) gstats) = "Talarlista " <>
 printGStats :: SpeakerLists -> String
 printGStats = bifoldMap (<> ": ") ((<> "\n") . show) . globalStats
 
+-- | Associates an emoji depending on the level of meta discussions
 listEmoji :: Int -> String
 listEmoji 0 = "😊"
 listEmoji 1 = "😮"
