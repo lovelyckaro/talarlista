@@ -47,7 +47,9 @@ pPop = string' "pop" >> return Pop
 pReset = string' "reset" >> return ResetAll
 
 -- | Parses 'Clear' 'Action's
-pClear = string' "clear" >> return Clear
+pClear = do
+  void (string' "clear") <|> void (char' 'c')
+  return Clear
 
 -- | Parses 'AddPerson' 'Action's with explicit add
 pAddExplicit = do
