@@ -5,6 +5,7 @@ import Text.Megaparsec
     parse,
     some,
     (<|>),
+    eof
   )
 import Text.Megaparsec.Char (char', printChar, space, string')
 import Text.Megaparsec.Error (ParseErrorBundle)
@@ -48,7 +49,8 @@ pReset = string' "reset" >> return ResetAll
 
 -- | Parses 'Clear' 'Action's
 pClear = do
-  void (string' "clear") <|> void (char' 'c')
+  void (string' "clear") <|> void (string' "c")
+  eof
   return Clear
 
 -- | Parses 'AddPerson' 'Action's with explicit add
