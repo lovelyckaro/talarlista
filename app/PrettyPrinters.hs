@@ -15,7 +15,7 @@ nameCap (p : erson) = toUpper p : erson
 
 -- | Pretty format for a 'SpeakerList'
 printList :: SpeakerList -> String
-printList SpeakerList {..} = unlines (toList (nameCap <$> (lista1 <> ["────────────────────────────────────"] <> lista2)))
+printList SpeakerList {..} = unlines (toList (nameCap <$> (lista1 <> ["──────────────────"] <> lista2)))
 
 -- | Pretty format for 'SpeakerLists'
 printLists :: SpeakerLists -> String

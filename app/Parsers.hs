@@ -5,8 +5,9 @@ import Text.Megaparsec
     parse,
     some,
     (<|>),
+    eof
   )
-import Text.Megaparsec.Char (char', printChar, space, string')
+import Text.Megaparsec.Char (char', printChar, space1, string')
 import Text.Megaparsec.Error (ParseErrorBundle)
 import Data.Void ( Void )
 import Control.Monad (void)
@@ -28,13 +29,15 @@ pAddPerson, pAction, pAddExplicit, pClear :: Parser Action
 -- | Parses 'RemoveTop' 'Action's
 pRemove = do
   void (char' 'x') <|> void (string' "remove")
+  eof
   return RemoveTop
 
 -- | Parses 'RemovePerson' 'Action's
 pRemovePerson = do
   void (char' 'x') <|> void (string' "remove")
-  space
+  space1
   name <- some printChar
+  eof
   return (RemovePerson name)
 
 -- | Parses 'Push' 'Action's
@@ -48,13 +51,14 @@ pReset = string' "reset" >> return ResetAll
 
 -- | Parses 'Clear' 'Action's
 pClear = do
-  void (string' "clear") <|> void (char' 'c')
+  void (string' "clear") <|> void (string' "c")
+  eof
   return Clear
 
 -- | Parses 'AddPerson' 'Action's with explicit add
 pAddExplicit = do
   string' "add"
-  space
+  space1
   name <- some printChar
   return (AddPerson name)
 
@@ -73,4 +77,4 @@ sanitize :: String -> String
 sanitize = map toLower . trim
 
 parseInput :: String -> Either (ParseErrorBundle String Void) Action
-parseInput = parse pAction . sanitize $ "input"
+parseInput = parse pAction . sanitize $ "input"
